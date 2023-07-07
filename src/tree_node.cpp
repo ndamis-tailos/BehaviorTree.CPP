@@ -18,9 +18,7 @@ namespace BT
 {
 
 TreeNode::TreeNode(std::string name, NodeConfig config) :
-  name_(std::move(name)),
-  status_(NodeStatus::IDLE),
-  config_(std::move(config))
+  name_(std::move(name)), status_(NodeStatus::IDLE), config_(std::move(config))
 {}
 
 NodeStatus TreeNode::executeTick()
@@ -28,17 +26,17 @@ NodeStatus TreeNode::executeTick()
   auto new_status = status_;
 
   // injected pre-callback
-  if(status_ == NodeStatus::IDLE)
+  if (status_ == NodeStatus::IDLE)
   {
-    PreTickCallback  callback;
+    PreTickCallback callback;
     {
       std::unique_lock lk(callback_injection_mutex_);
       callback = pre_condition_callback_;
     }
-    if(callback)
+    if (callback)
     {
       auto override_status = callback(*this);
-      if(isStatusCompleted(override_status))
+      if (isStatusCompleted(override_status))
       {
         // return immediately and don't execute the actual tick()
         new_status = override_status;
@@ -63,17 +61,17 @@ NodeStatus TreeNode::executeTick()
   checkPostConditions(new_status);
 
   // injected post callback
-  if(isStatusCompleted(new_status))
+  if (isStatusCompleted(new_status))
   {
-    PostTickCallback  callback;
+    PostTickCallback callback;
     {
       std::unique_lock lk(callback_injection_mutex_);
       callback = post_condition_callback_;
     }
-    if(callback)
+    if (callback)
     {
       auto override_status = callback(*this, new_status);
-      if(isStatusCompleted(override_status))
+      if (isStatusCompleted(override_status))
       {
         new_status = override_status;
       }
@@ -86,6 +84,7 @@ NodeStatus TreeNode::executeTick()
 
 void TreeNode::haltNode()
 {
+  std::cout << "DEBUG :::: Begin halting node | " << name_ << std::endl;
   halt();
 
   const auto& parse_executor = post_parsed_[size_t(PostCond::ON_HALTED)];
@@ -94,6 +93,7 @@ void TreeNode::haltNode()
     Ast::Environment env = {config().blackboard, config().enums};
     parse_executor(env);
   }
+  std::cout << "DEBUG :::: FINISHED halting node | " << name_ << std::endl;
 }
 
 void TreeNode::setStatus(NodeStatus new_status)
@@ -256,7 +256,7 @@ uint16_t TreeNode::UID() const
   return config_.uid;
 }
 
-const std::string &TreeNode::fullPath() const
+const std::string& TreeNode::fullPath() const
 {
   return config_.path;
 }
